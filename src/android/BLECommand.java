@@ -1,4 +1,4 @@
-package com.megster.cordova.ble.central;
+package nedap.uvdatareader.android;
 
 import org.apache.cordova.CallbackContext;
 
@@ -14,6 +14,7 @@ class BLECommand {
     public static int REGISTER_NOTIFY = 10001;
     public static int REMOVE_NOTIFY = 10002;
     public static int READ_RSSI = 10003;
+    public static int REGISTER_SERVER = 10004;
     // BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
     // BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 

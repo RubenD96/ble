@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.megster.cordova.ble.central;
+package nedap.uvdatareader.android;
 
 import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattServerCallback;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -41,6 +44,8 @@ import org.json.JSONException;
 
 import java.util.*;
 
+import nedap.uvdatareader.bluetooth.le.InformationHolder;
+
 public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.LeScanCallback {
     // actions
     private static final String SCAN = "scan";
@@ -57,10 +62,14 @@ public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.
     private static final String WRITE = "write";
     private static final String WRITE_WITHOUT_RESPONSE = "writeWithoutResponse";
 
+    private static final String SERVER_CALLBACK = "serverCallback";
+
     private static final String READ_RSSI = "readRSSI";
 
     private static final String START_NOTIFICATION = "startNotification"; // register for characteristic notification
     private static final String STOP_NOTIFICATION = "stopNotification"; // remove characteristic notification
+
+    private static final String START_SERVER_NOTIFICATION = "startServerNotification";
 
     private static final String IS_ENABLED = "isEnabled";
     private static final String IS_CONNECTED  = "isConnected";
@@ -208,6 +217,13 @@ public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.
             UUID serviceUUID = uuidFromString(args.getString(1));
             UUID characteristicUUID = uuidFromString(args.getString(2));
             removeNotifyCallback(callbackContext, macAddress, serviceUUID, characteristicUUID);
+
+        } else if (action.equals(START_SERVER_NOTIFICATION)) {
+
+            String macAddress = args.getString(0);
+            UUID serviceUUID = uuidFromString(args.getString(1));
+            UUID characteristicUUID = uuidFromString(args.getString(2));
+            registerServerCallback(callbackContext, macAddress, serviceUUID, characteristicUUID);
 
         } else if (action.equals(IS_ENABLED)) {
 
@@ -411,6 +427,21 @@ public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.
 
     }
 
+    /*private void startServerCallback(CallbackContext callbackContext) {
+
+        mBluetoothGattServer = ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).openGattServer(context, mGattServerCallback);
+        final BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
+                InformationHolder.Characteristics.WRITE_CHARACTERISTIC,
+                BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE);
+        final BluetoothGattService service = new BluetoothGattService(
+                InformationHolder.Services.WRITE_SERVICE,
+                BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        service.addCharacteristic(characteristic);
+        mBluetoothGattServer.addService(service);
+
+    }*/
+
     private void registerNotifyCallback(CallbackContext callbackContext, String macAddress, UUID serviceUUID, UUID characteristicUUID) {
 
         Peripheral peripheral = peripherals.get(macAddress);
@@ -443,6 +474,26 @@ public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.
             }
 
             peripheral.queueRemoveNotifyCallback(callbackContext, serviceUUID, characteristicUUID);
+
+        } else {
+
+            callbackContext.error("Peripheral " + macAddress + " not found");
+
+        }
+
+    }
+
+    private void registerServerCallback(CallbackContext callbackContext, String macAddress, UUID serviceUUID, UUID characteristicUUID) {
+
+        Peripheral peripheral = peripherals.get(macAddress);
+        if (peripheral != null) {
+
+            if (!peripheral.isConnected()) {
+                callbackContext.error("Peripheral " + macAddress + " is not connected.");
+                return;
+            }
+
+            peripheral.queueRegisterServerCallback(callbackContext, serviceUUID, characteristicUUID);
 
         } else {
 

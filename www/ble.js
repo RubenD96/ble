@@ -137,6 +137,10 @@ module.exports = {
         cordova.exec(success, failure, 'BLE', 'stopNotification', [device_id, service_uuid, characteristic_uuid]);
     },
 
+    startServerNotification: function (device_id, service_uuid, characteristic_uuid, success, failure) {
+        cordova.exec(success, failure, 'BLE', 'startServerNotification', [device_id, service_uuid, characteristic_uuid])
+    },
+
     isConnected: function (device_id, success, failure) {
         cordova.exec(success, failure, 'BLE', 'isConnected', [device_id]);
     },
@@ -169,6 +173,7 @@ module.exports.withPromises = {
     startScanWithOptions: module.exports.startScanWithOptions,
     connect: module.exports.connect,
     startNotification: module.exports.startNotification,
+    startServerNotification: module.exports.startServerNotification,
     startStateNotifications: module.exports.startStateNotifications,
 
     stopScan: function() {
@@ -209,7 +214,7 @@ module.exports.withPromises = {
 
     isConnected: function (device_id) {
         return new Promise(function(resolve, reject) {
-            module.exports.isConnected(device_id, resolve, reject);
+            module.exports.isConnected(device_id);
         });
     },
 
@@ -239,7 +244,7 @@ module.exports.withPromises = {
 
     readRSSI: function(device_id) {
         return new Promise(function(resolve, reject) {
-            module.exports.readRSSI(device_id, resolve, reject);
+            module.exports.readRSSI(device_id);
         });
     }
-};
+}

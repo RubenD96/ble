@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.megster.cordova.ble.central;
+package nedap.uvdatareader.android;
 
 import android.app.Activity;
 
 import android.bluetooth.*;
+import android.content.Context;
 import android.os.Build;
 import android.util.Base64;
 import org.apache.cordova.CallbackContext;
@@ -54,6 +55,7 @@ public class Peripheral extends BluetoothGattCallback {
     private CallbackContext writeCallback;
 
     private Map<String, CallbackContext> notificationCallbacks = new HashMap<String, CallbackContext>();
+    private Map<String, CallbackContext> serverCallbacks = new HashMap<String, CallbackContext>();
 
     public Peripheral(BluetoothDevice device, int advertisingRSSI, byte[] scanRecord) {
 
@@ -248,6 +250,30 @@ public class Peripheral extends BluetoothGattCallback {
         }
     }
 
+    public final BluetoothGattServerCallback gattServerCallback = new BluetoothGattServerCallback() {
+
+        @Override
+        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+        }
+
+        @Override
+        public void onServiceAdded(int status, BluetoothGattService service) {
+        }
+
+        @Override
+        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+            LOG.d(TAG, "onCharacteristicWriteRequest " + characteristic);
+
+            CallbackContext callback = serverCallbacks.get(generateHashKey(characteristic));
+
+            if (callback != null) {
+                PluginResult result = new PluginResult(PluginResult.Status.OK, characteristic.getValue());
+                result.setKeepCallback(true);
+                callback.sendPluginResult(result);
+            }
+        }
+    };
+
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
@@ -410,6 +436,31 @@ public class Peripheral extends BluetoothGattCallback {
 
         commandCompleted();
 
+    }
+
+    private void registerServerCallback(CallbackContext callbackContext, UUID serviceUUID, UUID characteristicUUID) {
+
+        if (gatt == null) {
+            callbackContext.error("BluetoothGatt is null");
+            return;
+        }
+
+        Activity activity = new Activity();
+        BluetoothGattServer bluetoothGattServer = ((BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE)).openGattServer(activity, gattServerCallback);
+        final BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
+                characteristicUUID,
+                BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE);
+        final BluetoothGattService service = new BluetoothGattService(
+                serviceUUID,
+                BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        service.addCharacteristic(characteristic);
+
+        String key = generateHashKey(serviceUUID, characteristic);
+        serverCallbacks.put(key, callbackContext);
+        bluetoothGattServer.addService(service);
+
+        commandCompleted();
     }
 
     // Some devices reuse UUIDs across characteristics, so we can't use service.getCharacteristic(characteristicUUID)
@@ -602,6 +653,10 @@ public class Peripheral extends BluetoothGattCallback {
         queueCommand(command);
     }
 
+    public void queueRegisterServerCallback(CallbackContext callbackContext, UUID serviceUUID, UUID characteristicUUID) {
+        BLECommand command = new BLECommand(callbackContext, serviceUUID, characteristicUUID, BLECommand.REGISTER_SERVER);
+        queueCommand(command);
+    }
 
     public void queueReadRSSI(CallbackContext callbackContext) {
         BLECommand command = new BLECommand(callbackContext, null, null, BLECommand.READ_RSSI);
@@ -654,9 +709,13 @@ public class Peripheral extends BluetoothGattCallback {
                 bleProcessing = true;
                 registerNotifyCallback(command.getCallbackContext(), command.getServiceUUID(), command.getCharacteristicUUID());
             } else if (command.getType() == BLECommand.REMOVE_NOTIFY) {
-                LOG.d(TAG,"Remove Notify " + command.getCharacteristicUUID());
+                LOG.d(TAG, "Remove Notify " + command.getCharacteristicUUID());
                 bleProcessing = true;
                 removeNotifyCallback(command.getCallbackContext(), command.getServiceUUID(), command.getCharacteristicUUID());
+            } else if (command.getType() == BLECommand.REGISTER_SERVER) {
+                LOG.d(TAG, "Register Server " + command.getCharacteristicUUID());
+                bleProcessing = true;
+                registerServerCallback(command.getCallbackContext(), command.getServiceUUID(), command.getCharacteristicUUID());
             } else if (command.getType() == BLECommand.READ_RSSI) {
                 LOG.d(TAG,"Read RSSI");
                 bleProcessing = true;
