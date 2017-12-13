@@ -1,4 +1,4 @@
-package nedap.uvdatareader.android;
+package com.megster.cordova.ble.central;
 
 import org.apache.cordova.CallbackContext;
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package nedap.uvdatareader.android;
+package com.megster.cordova.ble.central;
 
 import android.app.Activity;
 
