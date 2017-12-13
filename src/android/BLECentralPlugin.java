@@ -44,8 +44,6 @@ import org.json.JSONException;
 
 import java.util.*;
 
-import nedap.uvdatareader.bluetooth.le.InformationHolder;
-
 public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.LeScanCallback {
     // actions
     private static final String SCAN = "scan";
@@ -61,8 +59,6 @@ public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.
     private static final String READ = "read";
     private static final String WRITE = "write";
     private static final String WRITE_WITHOUT_RESPONSE = "writeWithoutResponse";
-
-    private static final String SERVER_CALLBACK = "serverCallback";
 
     private static final String READ_RSSI = "readRSSI";
 
@@ -426,21 +422,6 @@ public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.
         peripheral.queueWrite(callbackContext, serviceUUID, characteristicUUID, data, writeType);
 
     }
-
-    /*private void startServerCallback(CallbackContext callbackContext) {
-
-        mBluetoothGattServer = ((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).openGattServer(context, mGattServerCallback);
-        final BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
-                InformationHolder.Characteristics.WRITE_CHARACTERISTIC,
-                BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
-                BluetoothGattCharacteristic.PERMISSION_WRITE);
-        final BluetoothGattService service = new BluetoothGattService(
-                InformationHolder.Services.WRITE_SERVICE,
-                BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        service.addCharacteristic(characteristic);
-        mBluetoothGattServer.addService(service);
-
-    }*/
 
     private void registerNotifyCallback(CallbackContext callbackContext, String macAddress, UUID serviceUUID, UUID characteristicUUID) {
 
