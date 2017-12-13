@@ -3,7 +3,7 @@
   "version": "1.1.4",
   "description": "Bluetooth Low Energy (BLE) Central Plugin",
   "cordova": {
-    "id": "cordova-plugin-ble-central-extra",
+    "id": "cordova-plugin-ble-central",
     "platforms": [
       "ios",
       "android",
