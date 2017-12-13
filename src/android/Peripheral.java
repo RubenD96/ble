@@ -43,6 +43,7 @@ public class Peripheral extends BluetoothGattCallback {
     private BluetoothDevice device;
     private byte[] advertisingData;
     private int advertisingRSSI;
+    private Activity activity;
     private boolean connected = false;
     private boolean connecting = false;
     private ConcurrentLinkedQueue<BLECommand> commandQueue = new ConcurrentLinkedQueue<BLECommand>();
@@ -57,11 +58,12 @@ public class Peripheral extends BluetoothGattCallback {
     private Map<String, CallbackContext> notificationCallbacks = new HashMap<String, CallbackContext>();
     private Map<String, CallbackContext> serverCallbacks = new HashMap<String, CallbackContext>();
 
-    public Peripheral(BluetoothDevice device, int advertisingRSSI, byte[] scanRecord) {
+    public Peripheral(BluetoothDevice device, int advertisingRSSI, byte[] scanRecord, Activity activity) {
 
         this.device = device;
         this.advertisingRSSI = advertisingRSSI;
         this.advertisingData = scanRecord;
+        this.activity = activity;
 
     }
 
@@ -445,7 +447,6 @@ public class Peripheral extends BluetoothGattCallback {
             return;
         }
 
-        Activity activity = cordova.getActivity();
         BluetoothGattServer bluetoothGattServer = ((BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE)).openGattServer(activity, gattServerCallback);
         final BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
                 characteristicUUID,

@@ -559,7 +559,7 @@ public class BLECentralPlugin extends CordovaPlugin implements BluetoothAdapter.
 
         if (!alreadyReported) {
 
-            Peripheral peripheral = new Peripheral(device, rssi, scanRecord);
+            Peripheral peripheral = new Peripheral(device, rssi, scanRecord, cordova.getActivity());
             peripherals.put(device.getAddress(), peripheral);
 
             if (discoverCallback != null) {
