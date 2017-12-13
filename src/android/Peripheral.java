@@ -445,7 +445,7 @@ public class Peripheral extends BluetoothGattCallback {
             return;
         }
 
-        Activity activity = new Activity();
+        Activity activity = cordova.getActivity();
         BluetoothGattServer bluetoothGattServer = ((BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE)).openGattServer(activity, gattServerCallback);
         final BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
                 characteristicUUID,
