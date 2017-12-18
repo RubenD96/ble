@@ -256,16 +256,19 @@ public class Peripheral extends BluetoothGattCallback {
 
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            super.onConnectionStateChange(device, status, newState);
             LOG.d(TAG, "onConnectionStateChange " + newState);
         }
 
         @Override
         public void onServiceAdded(int status, BluetoothGattService service) {
+            super.onServiceAdded(status, service);
             LOG.d(TAG, "onServiceAdded " + service.getUuid());
         }
 
         @Override
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+            super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             LOG.d(TAG, "onCharacteristicWriteRequest " + characteristic);
 
             CallbackContext callback = serverCallbacks.get(generateHashKey(characteristic));
@@ -449,7 +452,8 @@ public class Peripheral extends BluetoothGattCallback {
             return;
         }
 
-        BluetoothGattServer bluetoothGattServer = ((BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE)).openGattServer(activity, gattServerCallback);
+        BluetoothGattServer bluetoothGattServer = ((BluetoothManager) activity.getBaseContext().getSystemService(Context.BLUETOOTH_SERVICE))
+                .openGattServer(activity.getBaseContext(), gattServerCallback);
         final BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
                 characteristicUUID,
                 BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
@@ -461,7 +465,11 @@ public class Peripheral extends BluetoothGattCallback {
 
         String key = generateHashKey(serviceUUID, characteristic);
         serverCallbacks.put(key, callbackContext);
-        bluetoothGattServer.addService(service);
+        if (bluetoothGattServer != null) {
+            bluetoothGattServer.addService(service);
+        } else {
+            LOG.d(TAG, "bluetoothGattServer is null");
+        }
 
         commandCompleted();
     }
