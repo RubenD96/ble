@@ -256,10 +256,12 @@ public class Peripheral extends BluetoothGattCallback {
 
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            LOG.d(TAG, "onConnectionStateChange " + newState);
         }
 
         @Override
         public void onServiceAdded(int status, BluetoothGattService service) {
+            LOG.d(TAG, "onServiceAdded " + service.getUuid());
         }
 
         @Override
